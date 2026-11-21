@@ -1,17 +1,46 @@
 import express, {Application, Request, Response} from "express" ;
 // import userRoutes from './routes/';
 import carRoutes from './routes/cars';
+// import { env } from "./config/env";
+// import { connectDB } from "./config/database";
+import {authenticateKey} from './middleware/auth.middleware';
+import { myLogger } from './middleware/logger.middleware';
+import { swaggerSpec } from "./config/swagger";
+import swaggerUi from 'swagger-ui-express';
+import { errorHandler } from "./middleware/errorHandler.middleware";
 
-const PORT = process.env.PORT || 3001;
+
+// const PORT = env.port
 
 const app: Application = express();
+app.use(myLogger);
 
+
+
+// const startServer = async () => {
+//   await connectDB();
+
+//   app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+//   });
+
+// }
+// startServer();
 app.use(express.json());
 app.use('/api/v1/cars', carRoutes);
+app.use('/api/v1/cars', authenticateKey, carRoutes);
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+
+
 
 app.get("/ping", async (_req : Request, res: Response) => {
     res.json({
-    message: "hello from Serhii (Borya dai deneg)"
+    message: "borya dai deneg"
     });
 });
 
@@ -21,20 +50,25 @@ app.get('/bananas', async (_req : Request, res: Response) => {
     });
 });
 
-app.get('/Borya', async (_req : Request, res: Response) => {
+app.get('/Borya', myLogger, async (_req : Request, res: Response) => {
     res.json({
     message: "Dai deneg bazhezhda",
     });
 });
 
-app.use((req, _res, next) => {  
-    console.log(`${req.method} ${req.originalUrl} papapopope`);
-    next();
+app.get("/pong", (_req : Request, res: Response) => {
+    console.log("Received request to /pong");
+    throw new Error("Simulated error in /pong route");
 });
 
+app.get("/pung", async (_req : Request, res: Response) => {
+    console.log("Received request to /pung");
+     throw new Error("Simulated error in /pung route");
+});
+
+app.use(errorHandler);
 
 
-app.listen(PORT, () => {
-    console.log("Server is running on port", PORT);
-    });
+
+export {app};
 
